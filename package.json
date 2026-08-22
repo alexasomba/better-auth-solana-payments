@@ -1,0 +1,68 @@
+{
+  "name": "better-auth-solana-payments",
+  "version": "0.1.0",
+  "description": "One-time Solana payment integration for Better Auth",
+  "keywords": [
+    "better-auth",
+    "payments",
+    "solana",
+    "solana-pay"
+  ],
+  "homepage": "https://github.com/alexasomba/better-auth-solana-payments#readme",
+  "bugs": {
+    "url": "https://github.com/alexasomba/better-auth-solana-payments/issues"
+  },
+  "license": "MIT",
+  "author": "alexasomba",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexasomba/better-auth-solana-payments.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    },
+    "./client": {
+      "types": "./dist/client.d.mts",
+      "import": "./dist/client.mjs",
+      "default": "./dist/client.mjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "test": "vp test run",
+    "lint": "vp lint src test",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "better-call": "catalog:",
+    "defu": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "better-auth": "catalog:",
+    "solana-payments": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@11.8.0"
+}
