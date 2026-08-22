@@ -1,135 +1,77 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 
+import AuthPanel from "@/components/AuthPanel";
+import PaymentHistory from "@/components/PaymentHistory";
+import PaymentPanel from "@/components/PaymentPanel";
 import { authClient } from "@/lib/auth-client";
 
-type Payment = {
-  amount: string;
-  paymentUrl?: string;
-  reference: string;
-  status: string;
-};
+const referenceStorageKey = "better-auth-solana-payment-references";
 
 export const Route = createFileRoute("/")({ component: HomePage });
 
-function HomePage() {
-  const { data: session } = authClient.useSession();
-  const [email, setEmail] = useState("demo@example.com");
-  const [password, setPassword] = useState("password123456");
-  const [payment, setPayment] = useState<Payment | null>(null);
-  const [message, setMessage] = useState("Create an account or sign in to start.");
-  const [busy, setBusy] = useState(false);
+export function HomePage() {
+  const { data: session, isPending } = authClient.useSession();
+  const [references, setReferences] = useState<string[]>([]);
 
   useEffect(() => {
-    if (session?.user) setMessage(`Signed in as ${session.user.email}`);
-  }, [session]);
+    if (session?.user === undefined || session.user === null) {
+      setReferences([]);
+      return;
+    }
+    try {
+      const stored = window.localStorage.getItem(`${referenceStorageKey}:${session.user.id}`);
+      const parsed: unknown = stored === null ? [] : JSON.parse(stored);
+      setReferences(
+        Array.isArray(parsed)
+          ? parsed.filter((reference): reference is string => typeof reference === "string")
+          : [],
+      );
+    } catch {
+      setReferences([]);
+    }
+  }, [session?.user]);
 
-  async function signIn() {
-    setBusy(true);
-    const result = await authClient.signIn.email({ email, password });
-    setMessage(result.error?.message ?? "Signed in.");
-    setBusy(false);
-  }
-
-  async function signUp() {
-    setBusy(true);
-    const result = await authClient.signUp.email({ email, password, name: "Devnet Buyer" });
-    setMessage(result.error?.message ?? "Account created and signed in.");
-    setBusy(false);
-  }
-
-  async function createPayment() {
-    setBusy(true);
-    const result = await authClient.payment.create({
-      amount: "1",
-      metadata: { source: "tanstack-devnet-example" },
+  function rememberReference(reference: string) {
+    if (session?.user === undefined || session.user === null) return;
+    setReferences((current) => {
+      const next = [reference, ...current.filter((item) => item !== reference)].slice(0, 10);
+      window.localStorage.setItem(
+        `${referenceStorageKey}:${session.user.id}`,
+        JSON.stringify(next),
+      );
+      return next;
     });
-    if (result.error) setMessage(result.error.message ?? "Payment creation failed.");
-    if (result.data) {
-      setPayment(result.data);
-      setMessage("Open the payment in a wallet, then verify it on-chain.");
-    }
-    setBusy(false);
-  }
-
-  async function verifyPayment() {
-    if (!payment) return;
-    setBusy(true);
-    const result = await authClient.payment.verify({ reference: payment.reference });
-    if (result.error) setMessage(result.error.message ?? "Payment verification failed.");
-    if (result.data) {
-      setPayment(result.data);
-      setMessage(`Payment status: ${result.data.status}`);
-    }
-    setBusy(false);
   }
 
   return (
     <main className="page-shell">
-      <div className="hero">
-        <p className="eyebrow">TanStack Start example</p>
+      <header className="hero">
+        <p className="eyebrow">TanStack Start example · devnet</p>
         <h1>Better Auth + Solana Payments</h1>
         <p className="lede">
-          Authenticated one-time SPL-token checkout with a server-controlled recipient and RPC
-          verification.
+          A complete one-time SPL-token flow: authenticate, create a server-owned payment intent,
+          open it in a wallet, and verify the transfer against Solana RPC.
         </p>
         <p className="warning">
-          Configure a devnet SPL token mint and recipient in <code>.env</code> before paying.
+          Configure a devnet mint and recipient in <code>.env</code>. The browser never receives a
+          private key and never submits a transaction.
         </p>
-      </div>
+      </header>
 
-      <section className="card">
-        <h2>1. Sign in</h2>
-        <label>
-          Email
-          <input value={email} onChange={(event) => setEmail(event.target.value)} />
-        </label>
-        <label>
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </label>
-        <div className="actions">
-          <button disabled={busy} onClick={signIn}>
-            Sign in
-          </button>
-          <button className="secondary" disabled={busy} onClick={signUp}>
-            Create account
-          </button>
-        </div>
-      </section>
+      {isPending ? <section className="card status-text">Loading session…</section> : null}
+      {!isPending ? <AuthPanel session={session?.user === undefined ? null : session} /> : null}
+      {!isPending && session?.user !== undefined && session.user !== null ? (
+        <>
+          <PaymentPanel onCreated={(payment) => rememberReference(payment.reference)} />
+          <PaymentHistory references={references} />
+        </>
+      ) : null}
 
-      <section className="card">
-        <h2>2. Pay and verify</h2>
-        <button disabled={busy || !session?.user} onClick={createPayment}>
-          Create 1-token payment
-        </button>
-        {payment ? (
-          <div className="payment-details">
-            <p>
-              Reference: <code>{payment.reference}</code>
-            </p>
-            <p>Amount: {payment.amount} base units</p>
-            <p>
-              Status: <strong>{payment.status}</strong>
-            </p>
-            {payment.paymentUrl ? (
-              <a href={payment.paymentUrl}>Open payment in a Solana wallet</a>
-            ) : null}
-            <button className="secondary" disabled={busy} onClick={verifyPayment}>
-              Verify payment on-chain
-            </button>
-          </div>
-        ) : null}
-      </section>
-
-      <section className="card status">
-        <h2>Status</h2>
-        <p>{message}</p>
-      </section>
+      <footer className="footer">
+        <span>One-time payments only · devnet demonstration</span>
+        <a href="https://github.com/alexasomba/better-auth-solana-payments">View the package</a>
+      </footer>
     </main>
   );
 }

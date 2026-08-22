@@ -8,6 +8,8 @@
     "build": "vp build",
     "preview": "vp preview",
     "test": "vp test run",
+    "test:unit": "vp test run",
+    "test:watch": "vp test",
     "typecheck": "tsc --noEmit",
     "test:devnet": "node scripts/devnet-smoke.mjs"
   },
@@ -21,12 +23,16 @@
     "solana-payments": "^0.4.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
+    "jsdom": "^30.0.1",
     "typescript": "^6.0.3",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9",
-    "vite-plus": "0.2.9"
+    "vite-plus": "0.2.9",
+    "vitest": "^4.1.10"
   }
 }
