@@ -8,6 +8,7 @@ import {
   sessionMiddleware,
 } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
+import { formatTokenAmount } from "solana-payments";
 import { z } from "zod";
 
 import { createSolanaPaymentStore } from "./store.ts";
@@ -159,7 +160,7 @@ export const verifyPayment = <P extends string = "/verify-payment">(
         verified = await options.client.payments.verify({
           reference: payment.reference,
           recipient: payment.recipient,
-          amount: payment.amount,
+          amount: formatTokenAmount(payment.amount, payment.decimals),
         });
       } catch (error) {
         routeError(

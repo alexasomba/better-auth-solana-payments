@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
+import { formatTokenAmount, parseTokenAmount } from "solana-payments";
 
 import { solanaPayments } from "../src/index.ts";
 
@@ -36,8 +37,8 @@ function createClient(verification = {}) {
         reference: reference ?? "generated-reference",
         recipient,
         mint: MINT,
-        amount: BigInt(amount),
-        displayAmount: "12.34",
+        amount: parseTokenAmount(amount, 6),
+        displayAmount: formatTokenAmount(parseTokenAmount(amount, 6), 6),
         decimals: 6,
         memo: `solana-usdt:${reference}`,
         createdAt: "2026-08-22T12:00:00.000Z",
@@ -52,11 +53,49 @@ function createClient(verification = {}) {
         found: true,
         reference: input.reference,
         recipient: input.recipient,
-        amount: BigInt(input.amount),
+        amount: parseTokenAmount(input.amount as string, 6),
         signature: "5XQqoA2BK2CAxyoLhYBU7dd1usTW1wMW3QDKMSmUeEwJ",
         slot: 299123456n,
         ...verification,
       })),
+    },
+  };
+}
+
+function createDecimalSemanticsClient(decimals = 6) {
+  const verifyAmounts: string[] = [];
+  return {
+    verifyAmounts,
+    client: {
+      payments: {
+        createRequest: vi.fn(({ amount, recipient, reference }) => ({
+          reference: reference ?? "generated-reference",
+          recipient,
+          mint: MINT,
+          amount: parseTokenAmount(amount, decimals),
+          displayAmount: formatTokenAmount(parseTokenAmount(amount, decimals), decimals),
+          decimals,
+          memo: `solana-usdt:${reference}`,
+          createdAt: "2026-08-22T12:00:00.000Z",
+        })),
+        toSolanaPayUrl: vi.fn(
+          (request) =>
+            new URL(
+              `solana:${request.recipient}?amount=${request.displayAmount}&spl-token=${MINT}&reference=${request.reference}`,
+            ),
+        ),
+        verify: vi.fn(async (input) => {
+          verifyAmounts.push(input.amount as string);
+          return {
+            found: true,
+            reference: input.reference,
+            recipient: input.recipient,
+            amount: parseTokenAmount(input.amount as string, decimals),
+            signature: "5XQqoA2BK2CAxyoLhYBU7dd1usTW1wMW3QDKMSmUeEwJ",
+            slot: 299123456n,
+          };
+        }),
+      },
     },
   };
 }
@@ -80,7 +119,7 @@ describe("Solana payment routes", () => {
 
     const payment = await plugin.endpoints.createPayment({
       ...context(adapter),
-      body: { amount: "12340000", metadata: { orderId: "order-1" } },
+      body: { amount: "12.34", metadata: { orderId: "order-1" } },
     });
 
     expect(payment).toMatchObject({
@@ -99,13 +138,60 @@ describe("Solana payment routes", () => {
     });
   });
 
+  it("converts the stored base-unit amount back to display units before SDK verification", async () => {
+    const adapter = createAdapter();
+    const { client, verifyAmounts } = createDecimalSemanticsClient();
+    const plugin = solanaPayments({ client: client as never, recipient: RECIPIENT });
+    const created = await plugin.endpoints.createPayment({
+      ...context(adapter),
+      body: { amount: "2.5" },
+    });
+
+    expect(created.amount).toBe("2500000");
+
+    const verified = await plugin.endpoints.verifyPayment({
+      ...context(adapter),
+      body: { reference: created.reference },
+    });
+
+    expect(verifyAmounts).toEqual(["2.5"]);
+    expect(verified).toMatchObject({
+      reference: created.reference,
+      amount: "2500000",
+      status: "paid",
+    });
+  });
+
+  it("preserves zero-decimal token amounts during verification", async () => {
+    const adapter = createAdapter();
+    const { client, verifyAmounts } = createDecimalSemanticsClient(0);
+    const plugin = solanaPayments({ client: client as never, recipient: RECIPIENT });
+    const created = await plugin.endpoints.createPayment({
+      ...context(adapter),
+      body: { amount: "42" },
+    });
+
+    const verified = await plugin.endpoints.verifyPayment({
+      ...context(adapter),
+      body: { reference: created.reference },
+    });
+
+    expect(created.amount).toBe("42");
+    expect(verifyAmounts).toEqual(["42"]);
+    expect(verified).toMatchObject({
+      reference: created.reference,
+      amount: "42",
+      status: "paid",
+    });
+  });
+
   it("rejects a verifier result whose amount or recipient does not exactly match the stored intent", async () => {
     const adapter = createAdapter();
     const client = createClient({ amount: 1n, recipient: "wrong-recipient" });
     const plugin = solanaPayments({ client: client as never, recipient: RECIPIENT });
     const created = await plugin.endpoints.createPayment({
       ...context(adapter),
-      body: { amount: "12340000" },
+      body: { amount: "12.34" },
     });
 
     await expect(
@@ -117,7 +203,7 @@ describe("Solana payment routes", () => {
     expect(client.payments.verify).toHaveBeenCalledWith({
       reference: created.reference,
       recipient: RECIPIENT,
-      amount: "12340000",
+      amount: "12.34",
     });
   });
 
@@ -132,7 +218,7 @@ describe("Solana payment routes", () => {
     });
     const created = await plugin.endpoints.createPayment({
       ...context(adapter),
-      body: { amount: "12340000" },
+      body: { amount: "12.34" },
     });
 
     await expect(
@@ -171,7 +257,7 @@ describe("Solana payment routes", () => {
     };
     const created = await plugin.endpoints.createPayment({
       ...orgContext,
-      body: { amount: "12340000", organizationId: "org-1" },
+      body: { amount: "12.34", organizationId: "org-1" },
     });
     const first = await plugin.endpoints.verifyPayment({
       ...orgContext,
@@ -199,7 +285,7 @@ describe("Solana payment routes", () => {
     await expect(
       plugin.endpoints.createPayment({
         ...context(adapter),
-        body: { amount: "12340000", organizationId: "org-1" },
+        body: { amount: "12.34", organizationId: "org-1" },
       }),
     ).rejects.toMatchObject({ body: { code: "UNAUTHORIZED_PAYMENT" } });
     await expect(
@@ -209,7 +295,7 @@ describe("Solana payment routes", () => {
           ...context(adapter).context,
           hasPlugin: (id: string) => id === "organization",
         },
-        body: { amount: "12340000", organizationId: "org-1" },
+        body: { amount: "12.34", organizationId: "org-1" },
       }),
     ).rejects.toMatchObject({ body: { code: "UNAUTHORIZED_PAYMENT" } });
   });
@@ -222,7 +308,7 @@ describe("Solana payment routes", () => {
     const plugin = solanaPayments({ client: createClient() as never, recipient: RECIPIENT });
 
     const error = await plugin.endpoints
-      .createPayment({ ...context(adapter), body: { amount: "12340000" } })
+      .createPayment({ ...context(adapter), body: { amount: "12.34" } })
       .catch((error: unknown) => error);
 
     expect(error).toMatchObject({ message: "database unavailable" });
@@ -239,7 +325,7 @@ describe("Solana payment routes", () => {
     });
     const created = await plugin.endpoints.createPayment({
       ...context(adapter),
-      body: { amount: "12340000" },
+      body: { amount: "12.34" },
     });
 
     await Promise.all([
