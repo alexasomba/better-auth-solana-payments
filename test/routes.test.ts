@@ -214,6 +214,21 @@ describe("Solana payment routes", () => {
     ).rejects.toMatchObject({ body: { code: "UNAUTHORIZED_PAYMENT" } });
   });
 
+  it("does not convert adapter create failures into unauthorized payment errors", async () => {
+    const adapter = createAdapter();
+    adapter.create = async () => {
+      throw new Error("database unavailable");
+    };
+    const plugin = solanaPayments({ client: createClient() as never, recipient: RECIPIENT });
+
+    const error = await plugin.endpoints
+      .createPayment({ ...context(adapter), body: { amount: "12340000" } })
+      .catch((error: unknown) => error);
+
+    expect(error).toMatchObject({ message: "database unavailable" });
+    expect(error).not.toHaveProperty("body");
+  });
+
   it("calls completion once when concurrent verification races for the pending transition", async () => {
     const adapter = createAdapter();
     const callback = vi.fn();

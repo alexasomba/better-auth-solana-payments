@@ -116,25 +116,17 @@ export const createPayment = <P extends string = "/create-payment">(
         reference,
         metadata: ctx.body.metadata,
       });
-      let payment;
-      try {
-        payment = await store.create({
-          reference: request.reference,
-          amount: request.amount.toString(),
-          mint: request.mint,
-          decimals: request.decimals,
-          recipient: request.recipient ?? options.recipient,
-          expiresAt: new Date(Date.now() + options.paymentExpirationMs),
-          metadata: ctx.body.metadata ? JSON.stringify(ctx.body.metadata) : null,
-          signature: null,
-          slot: null,
-        });
-      } catch (error) {
-        routeError(
-          "UNAUTHORIZED_PAYMENT",
-          error instanceof Error ? error.message : "Unauthorized payment.",
-        );
-      }
+      const payment = await store.create({
+        reference: request.reference,
+        amount: request.amount.toString(),
+        mint: request.mint,
+        decimals: request.decimals,
+        recipient: request.recipient ?? options.recipient,
+        expiresAt: new Date(Date.now() + options.paymentExpirationMs),
+        metadata: ctx.body.metadata ? JSON.stringify(ctx.body.metadata) : null,
+        signature: null,
+        slot: null,
+      });
       const paymentUrl = options.client.payments.toSolanaPayUrl(request).toString();
       return ctx.json(asResponse(payment, paymentUrl));
     },
