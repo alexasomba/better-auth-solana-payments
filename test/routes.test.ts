@@ -192,6 +192,28 @@ describe("Solana payment routes", () => {
     expect(client.payments.verify).toHaveBeenCalledTimes(1);
   });
 
+  it("maps missing organization plugin and membership during payment creation to unauthorized payment", async () => {
+    const adapter = createAdapter();
+    const plugin = solanaPayments({ client: createClient() as never, recipient: RECIPIENT });
+
+    await expect(
+      plugin.endpoints.createPayment({
+        ...context(adapter),
+        body: { amount: "12340000", organizationId: "org-1" },
+      }),
+    ).rejects.toMatchObject({ body: { code: "UNAUTHORIZED_PAYMENT" } });
+    await expect(
+      plugin.endpoints.createPayment({
+        ...context(adapter),
+        context: {
+          ...context(adapter).context,
+          hasPlugin: (id: string) => id === "organization",
+        },
+        body: { amount: "12340000", organizationId: "org-1" },
+      }),
+    ).rejects.toMatchObject({ body: { code: "UNAUTHORIZED_PAYMENT" } });
+  });
+
   it("calls completion once when concurrent verification races for the pending transition", async () => {
     const adapter = createAdapter();
     const callback = vi.fn();

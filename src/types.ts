@@ -1,7 +1,7 @@
-import type { InferOptionSchema } from "better-auth";
+import type { GenericEndpointContext, InferOptionSchema } from "better-auth";
 import type { AddressInput, SolanaUsdtReadOnlyClient } from "solana-payments";
 
-import type { SolanaPaymentsPluginSchema } from "./schema";
+import type { SolanaPaymentsPluginSchema } from "./schema.ts";
 
 export type SolanaPaymentStatus = "pending" | "paid" | "expired" | "failed";
 
@@ -29,7 +29,10 @@ export interface SolanaPaymentsOptions {
   client: SolanaUsdtReadOnlyClient;
   recipient: AddressInput;
   paymentExpirationMs?: number;
-  onPaymentComplete?: (payment: SolanaPayment, context: unknown) => Promise<void> | void;
+  onPaymentComplete?: (
+    payment: SolanaPayment,
+    context: GenericEndpointContext,
+  ) => Promise<void> | void;
   organization?: {
     enabled?: boolean;
   };

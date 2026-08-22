@@ -1,4 +1,4 @@
-import type { SolanaPayment } from "./types";
+import type { SolanaPayment } from "./types.ts";
 
 const SOLANA_PAYMENT_MODEL = "solanaPayment";
 
@@ -26,11 +26,18 @@ export interface MarkPaidInput {
   slot?: string;
 }
 
+export interface MarkPaidResult {
+  payment: SolanaPayment | null;
+  transitioned: boolean;
+}
+
 export interface SolanaPaymentStore {
+  assertOwner(): Promise<void>;
   create(input: CreateSolanaPaymentInput): Promise<SolanaPayment>;
   findById(id: string): Promise<SolanaPayment | null>;
   findByReference(reference: string): Promise<SolanaPayment | null>;
   markPaid(reference: string, input?: MarkPaidInput): Promise<SolanaPayment | null>;
+  markPaidWithTransition(reference: string, input?: MarkPaidInput): Promise<MarkPaidResult>;
   markExpired(reference: string): Promise<SolanaPayment | null>;
 }
 
@@ -70,7 +77,31 @@ export function createSolanaPaymentStore(context: SolanaPaymentStoreContext): So
       where: await paymentWhere([{ field: "reference", value: reference }]),
     });
 
+  const markPaidWithTransition = async (
+    reference: string,
+    input: MarkPaidInput = {},
+  ): Promise<MarkPaidResult> => {
+    const payment = await findByReference(reference);
+    if (!payment) return { payment: null, transitioned: false };
+    if (payment.status === "paid") return { payment, transitioned: false };
+    if (payment.status !== "pending") return { payment: null, transitioned: false };
+    const updated = await context.adapter.update<SolanaPayment>({
+      model: SOLANA_PAYMENT_MODEL,
+      update: { status: "paid", ...input, updatedAt: new Date() },
+      where: await paymentWhere([
+        { field: "id", value: payment.id },
+        { field: "status", value: "pending" },
+      ]),
+    });
+    if (updated) return { payment: updated, transitioned: true };
+    const current = await findByReference(reference);
+    return { payment: current?.status === "paid" ? current : null, transitioned: false };
+  };
+
   return {
+    async assertOwner() {
+      await getOwner();
+    },
     async create(input) {
       const owner = await getOwner();
       const now = new Date();
@@ -93,23 +124,9 @@ export function createSolanaPaymentStore(context: SolanaPaymentStoreContext): So
       }),
     findByReference,
     async markPaid(reference, input = {}) {
-      const payment = await findByReference(reference);
-      if (!payment || payment.status === "paid") return payment;
-      if (payment.status !== "pending") return null;
-
-      const updated = await context.adapter.update<SolanaPayment>({
-        model: SOLANA_PAYMENT_MODEL,
-        update: { status: "paid", ...input, updatedAt: new Date() },
-        where: await paymentWhere([
-          { field: "id", value: payment.id },
-          { field: "status", value: "pending" },
-        ]),
-      });
-      if (updated) return updated;
-
-      const current = await findByReference(reference);
-      return current?.status === "paid" ? current : null;
+      return (await markPaidWithTransition(reference, input)).payment;
     },
+    markPaidWithTransition,
     async markExpired(reference) {
       const payment = await findByReference(reference);
       if (!payment || payment.status !== "pending")

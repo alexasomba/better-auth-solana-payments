@@ -7,10 +7,11 @@ import {
   originCheck,
   sessionMiddleware,
 } from "better-auth/api";
+import type { GenericEndpointContext } from "better-auth";
 import { z } from "zod";
 
-import { createSolanaPaymentStore } from "./store";
-import type { SolanaPayment, SolanaPaymentsOptions } from "./types";
+import { createSolanaPaymentStore } from "./store.ts";
+import type { SolanaPayment, SolanaPaymentsOptions } from "./types.ts";
 
 const createPaymentBody = z.object({
   amount: z.string().min(1),
@@ -25,7 +26,6 @@ const getPaymentQuery = z.object({
   reference: z.string().min(1),
   organizationId: z.string().min(1).optional(),
 });
-const completedCallbackReferences = new Set<string>();
 
 function routeError(
   code:
@@ -42,16 +42,18 @@ function routeError(
   });
 }
 
-async function paymentStore(ctx: any, organizationId?: string) {
+async function paymentStore(ctx: GenericEndpointContext, organizationId?: string) {
   const session = await getSessionFromCtx(ctx);
   if (!session) routeError("MISSING_SESSION", "An authenticated session is required.");
   try {
-    return createSolanaPaymentStore({
+    const store = createSolanaPaymentStore({
       adapter: ctx.context.adapter,
       session,
       organizationId,
       hasOrganizationPlugin: ctx.context.hasPlugin?.("organization") === true,
     });
+    await store.assertOwner();
+    return store;
   } catch (error) {
     routeError(
       "UNAUTHORIZED_PAYMENT",
@@ -60,7 +62,11 @@ async function paymentStore(ctx: any, organizationId?: string) {
   }
 }
 
-async function loadPayment(ctx: any, reference: string, organizationId?: string) {
+async function loadPayment(
+  ctx: GenericEndpointContext,
+  reference: string,
+  organizationId?: string,
+) {
   const store = await paymentStore(ctx, organizationId);
   try {
     const payment = await store.findByReference(reference);
@@ -110,17 +116,25 @@ export const createPayment = <P extends string = "/create-payment">(
         reference,
         metadata: ctx.body.metadata,
       });
-      const payment = await store.create({
-        reference: request.reference,
-        amount: request.amount.toString(),
-        mint: request.mint,
-        decimals: request.decimals,
-        recipient: request.recipient ?? options.recipient,
-        expiresAt: new Date(Date.now() + options.paymentExpirationMs),
-        metadata: ctx.body.metadata ? JSON.stringify(ctx.body.metadata) : null,
-        signature: null,
-        slot: null,
-      });
+      let payment;
+      try {
+        payment = await store.create({
+          reference: request.reference,
+          amount: request.amount.toString(),
+          mint: request.mint,
+          decimals: request.decimals,
+          recipient: request.recipient ?? options.recipient,
+          expiresAt: new Date(Date.now() + options.paymentExpirationMs),
+          metadata: ctx.body.metadata ? JSON.stringify(ctx.body.metadata) : null,
+          signature: null,
+          slot: null,
+        });
+      } catch (error) {
+        routeError(
+          "UNAUTHORIZED_PAYMENT",
+          error instanceof Error ? error.message : "Unauthorized payment.",
+        );
+      }
       const paymentUrl = options.client.payments.toSolanaPayUrl(request).toString();
       return ctx.json(asResponse(payment, paymentUrl));
     },
@@ -129,6 +143,7 @@ export const createPayment = <P extends string = "/create-payment">(
 export const verifyPayment = <P extends string = "/verify-payment">(
   options: SolanaPaymentsOptions,
   path: P = "/verify-payment" as P,
+  callbacksInFlight = new Set<string>(),
 ) =>
   createAuthEndpoint(
     path,
@@ -168,14 +183,21 @@ export const verifyPayment = <P extends string = "/verify-payment">(
       ) {
         routeError("PAYMENT_MISMATCH", "Payment did not exactly match the stored intent.");
       }
-      const paid = await store.markPaid(payment.reference, {
-        signature: verified.signature,
-        slot: verified.slot?.toString(),
-      });
+      const { payment: paid, transitioned } = await store.markPaidWithTransition(
+        payment.reference,
+        {
+          signature: verified.signature,
+          slot: verified.slot?.toString(),
+        },
+      );
       if (!paid) routeError("INVALID_PAYMENT", "Payment state could not be updated.");
-      if (wasPending && !completedCallbackReferences.has(paid.reference)) {
-        completedCallbackReferences.add(paid.reference);
-        await options.onPaymentComplete?.(paid, ctx);
+      if (wasPending && transitioned && !callbacksInFlight.has(paid.reference)) {
+        callbacksInFlight.add(paid.reference);
+        try {
+          await options.onPaymentComplete?.(paid, ctx);
+        } finally {
+          callbacksInFlight.delete(paid.reference);
+        }
       }
       return ctx.json(asResponse(paid));
     },

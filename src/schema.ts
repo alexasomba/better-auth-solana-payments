@@ -1,6 +1,6 @@
 import { mergeSchema, type BetterAuthPluginDBSchema, type DBFieldAttribute } from "better-auth/db";
 
-import type { SolanaPaymentsOptions } from "./types";
+import type { SolanaPaymentsOptions } from "./types.ts";
 
 type SolanaPaymentSchema = Record<
   "solanaPayment",
