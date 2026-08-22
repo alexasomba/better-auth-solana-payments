@@ -72,6 +72,10 @@ jobs:
         if: ${{ env.release_tag != '' }}
         run: pnpm install --frozen-lockfile
 
+      - name: Install TanStack example dependencies
+        if: ${{ env.release_tag != '' }}
+        run: pnpm --dir examples/tanstack install --frozen-lockfile
+
       - name: Check
         if: ${{ env.release_tag != '' }}
         run: pnpm exec vp check
