@@ -4,54 +4,24 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-catalogs:
-  default:
-    '@types/node':
-      specifier: ^24.13.2
-      version: 24.13.3
-    better-auth:
-      specifier: 1.6.25
-      version: 1.6.25
-    better-call:
-      specifier: 1.3.7
-      version: 1.3.7
-    defu:
-      specifier: ^6.1.7
-      version: 6.1.7
-    solana-payments:
-      specifier: ^0.4.0
-      version: 0.4.0
-    typescript:
-      specifier: ^6.0.3
-      version: 6.0.3
-    vite-plus:
-      specifier: 0.2.6
-      version: 0.2.6
-    vitest:
-      specifier: 4.1.10
-      version: 4.1.10
-    zod:
-      specifier: ^4.4.3
-      version: 4.4.3
-
 importers:
 
   .:
     dependencies:
       better-auth:
-        specifier: 'catalog:'
+        specifier: ^1.6.25
         version: 1.6.25(vitest@4.1.10(@types/node@24.13.3)(@vitest/browser-preview@4.1.10)(vite@8.2.2(@types/node@24.13.3)))
       better-call:
-        specifier: 'catalog:'
+        specifier: 1.3.7
         version: 1.3.7(zod@4.4.3)
       defu:
-        specifier: 'catalog:'
+        specifier: ^6.1.7
         version: 6.1.7
       solana-payments:
-        specifier: 'catalog:'
+        specifier: ^0.4.0
         version: 0.4.0(typescript@6.0.3)
       zod:
-        specifier: 'catalog:'
+        specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
       '@arethetypeswrong/cli':
@@ -61,19 +31,19 @@ importers:
         specifier: ^1.3.1
         version: 1.3.1
       '@types/node':
-        specifier: 'catalog:'
+        specifier: ^24.13.3
         version: 24.13.3
       publint:
         specifier: ^0.3.24
         version: 0.3.24
       typescript:
-        specifier: 'catalog:'
+        specifier: ^6.0.3
         version: 6.0.3
       vite-plus:
-        specifier: 'catalog:'
+        specifier: 0.2.6
         version: 0.2.6(@arethetypeswrong/core@0.18.5)(@types/node@24.13.3)(publint@0.3.24)(typescript@6.0.3)(vite@8.2.2(@types/node@24.13.3))
       vitest:
-        specifier: 'catalog:'
+        specifier: 4.1.10
         version: 4.1.10(@types/node@24.13.3)(@vitest/browser-preview@4.1.10)(vite@8.2.2(@types/node@24.13.3))
 
 packages:
