@@ -1,6 +1,6 @@
 {
   "name": "better-auth-solana-payments",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "One-time Solana payment integration for Better Auth",
   "keywords": [
     "better-auth",

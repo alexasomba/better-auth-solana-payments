@@ -89,3 +89,25 @@ never signs or sends a transaction on behalf of a customer.
 
 This package supports one-time payments only. It does not create recurring subscriptions or
 perform recurring charges.
+
+## TanStack Start example
+
+The repository includes a runnable TanStack Start example at
+[`examples/tanstack`](./examples/tanstack). It demonstrates email/password auth, server-created
+Solana Pay requests, wallet checkout, and server-side verification against devnet RPC.
+
+```bash
+cd examples/tanstack
+cp .env.example .env
+# Set SOLANA_MINT and SOLANA_RECIPIENT to your devnet SPL token and recipient.
+pnpm install
+pnpm dev
+```
+
+The example uses an in-memory adapter and is intended for local development only. It does not
+store private keys or submit transactions. See its README for the repeatable RPC and on-chain
+smoke test (`pnpm test:devnet`) and the full wallet verification flow.
+
+For devnet, configure a devnet SPL-token mint; the built-in `SOLANA_USDT` preset is the mainnet
+USDT mint and must not be used for devnet testing. In production, use a persistent Better Auth
+adapter, a generated `BETTER_AUTH_SECRET`, and a dedicated RPC provider.
