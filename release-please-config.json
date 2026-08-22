@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "package-name": "better-auth-solana-payments",
+  "changelog-path": "CHANGELOG.md",
+  "include-component-in-tag": false,
+  "include-v-in-tag": true,
+  "include-v-in-release-name": true,
+  "extra-files": [
+    {
+      "type": "generic",
+      "path": "src/version.ts"
+    }
+  ]
+}

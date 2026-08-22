@@ -49,6 +49,8 @@ const solanaPaymentSchema: SolanaPaymentSchema = {
 export type SolanaPaymentsPluginSchema = SolanaPaymentSchema;
 export const solanaPaymentsPluginSchema: SolanaPaymentSchema = solanaPaymentSchema;
 
-export function getSchema(options: SolanaPaymentsOptions): BetterAuthPluginDBSchema {
+export function getSchema(
+  options: Pick<SolanaPaymentsOptions, "schema">,
+): BetterAuthPluginDBSchema {
   return mergeSchema(solanaPaymentSchema, options.schema as Parameters<typeof mergeSchema>[1]);
 }

@@ -122,7 +122,7 @@ export const createPayment = <P extends string = "/create-payment">(
         mint: request.mint,
         decimals: request.decimals,
         recipient: request.recipient ?? options.recipient,
-        expiresAt: new Date(Date.now() + options.paymentExpirationMs),
+        expiresAt: new Date(Date.now() + (options.paymentExpirationMs ?? 30 * 60 * 1000)),
         metadata: ctx.body.metadata ? JSON.stringify(ctx.body.metadata) : null,
         signature: null,
         slot: null,
