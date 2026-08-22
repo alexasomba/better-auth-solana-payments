@@ -1,5 +1,5 @@
 import type { InferOptionSchema } from "better-auth";
-import type { SolanaPaymentsReadOnlyClient } from "solana-payments";
+import type { AddressInput, SolanaUsdtReadOnlyClient } from "solana-payments";
 
 import type { SolanaPaymentsPluginSchema } from "./schema";
 
@@ -26,10 +26,10 @@ export interface SolanaPayment {
 }
 
 export interface SolanaPaymentsOptions {
-  client?: SolanaPaymentsReadOnlyClient;
-  recipient?: string;
-  mint?: string;
-  decimals?: number;
+  client: SolanaUsdtReadOnlyClient;
+  recipient: AddressInput;
+  paymentExpirationMs?: number;
+  onPaymentComplete?: (payment: SolanaPayment, context: unknown) => Promise<void> | void;
   organization?: {
     enabled?: boolean;
   };
