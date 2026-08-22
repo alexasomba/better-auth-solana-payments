@@ -1,4 +1,4 @@
-import { getSchema } from "../src/schema";
+import { getSchema } from "../src/schema.ts";
 
 describe("Solana payment schema", () => {
   it("defines the Solana payment persistence fields", () => {

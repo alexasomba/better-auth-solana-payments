@@ -97,7 +97,7 @@ export function createSolanaPaymentStore(context: SolanaPaymentStoreContext): So
       if (!payment || payment.status === "paid") return payment;
       if (payment.status !== "pending") return null;
 
-      return context.adapter.update<SolanaPayment>({
+      const updated = await context.adapter.update<SolanaPayment>({
         model: SOLANA_PAYMENT_MODEL,
         update: { status: "paid", ...input, updatedAt: new Date() },
         where: await paymentWhere([
@@ -105,6 +105,10 @@ export function createSolanaPaymentStore(context: SolanaPaymentStoreContext): So
           { field: "status", value: "pending" },
         ]),
       });
+      if (updated) return updated;
+
+      const current = await findByReference(reference);
+      return current?.status === "paid" ? current : null;
     },
     async markExpired(reference) {
       const payment = await findByReference(reference);

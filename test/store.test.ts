@@ -1,4 +1,4 @@
-import { createSolanaPaymentStore } from "../src/store";
+import { createSolanaPaymentStore } from "../src/store.ts";
 
 type Row = Record<string, unknown>;
 type WhereClause = { field: string; value: unknown }[];
@@ -86,6 +86,26 @@ describe("Solana payment store", () => {
 
     expect(paid).toMatchObject({ status: "paid", slot: "299123456" });
     expect(retried).toEqual(paid);
+  });
+
+  it("returns the paid record to concurrent callers when one loses the pending update race", async () => {
+    const { adapter } = createInMemoryAdapter();
+    const store = createSolanaPaymentStore({ adapter, session: { user: { id: "user-1" } } });
+    await store.create(payment);
+
+    const [first, second] = await Promise.all([
+      store.markPaid(payment.reference, {
+        signature: "5XQqoA2BK2CAxyoLhYBU7dd1usTW1wMW3QDKMSmUeEwJ",
+        slot: "299123456",
+      }),
+      store.markPaid(payment.reference, {
+        signature: "different-signature-must-not-overwrite",
+        slot: "299123457",
+      }),
+    ]);
+
+    expect(first).toMatchObject({ status: "paid" });
+    expect(second).toEqual(first);
   });
 
   it("requires an authenticated member for organization-owned reads and writes", async () => {
