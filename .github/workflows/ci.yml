@@ -30,9 +30,6 @@ jobs:
           run-install: |
             - args: ["--frozen-lockfile"]
 
-      - name: Install TanStack example dependencies
-        run: pnpm --dir examples/tanstack exec vp install --frozen-lockfile -- --config.minimumReleaseAge=0
-
       - name: Check
         run: vp check
 
@@ -49,10 +46,10 @@ jobs:
         run: vp run lint:types
 
       - name: Check TanStack example
-        run: pnpm --dir examples/tanstack exec vp check
+        run: vp -C examples/tanstack check
 
       - name: Test TanStack example
-        run: pnpm --dir examples/tanstack exec vp test
+        run: vp -C examples/tanstack test
 
       - name: Build TanStack example
-        run: pnpm --dir examples/tanstack exec vp build
+        run: vp -C examples/tanstack build

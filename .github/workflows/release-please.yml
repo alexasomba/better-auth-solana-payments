@@ -67,21 +67,17 @@ jobs:
         if: ${{ env.release_tag != '' }}
         run: npm install --global npm@11.18.0
 
-      - name: Install TanStack example dependencies
-        if: ${{ env.release_tag != '' }}
-        run: pnpm --dir examples/tanstack exec vp install --frozen-lockfile -- --config.minimumReleaseAge=0
-
       - name: Check TanStack example
         if: ${{ env.release_tag != '' }}
-        run: pnpm --dir examples/tanstack exec vp check
+        run: vp -C examples/tanstack check
 
       - name: Test TanStack example
         if: ${{ env.release_tag != '' }}
-        run: pnpm --dir examples/tanstack exec vp test
+        run: vp -C examples/tanstack test
 
       - name: Build TanStack example
         if: ${{ env.release_tag != '' }}
-        run: pnpm --dir examples/tanstack exec vp build
+        run: vp -C examples/tanstack build
 
       - name: Check
         if: ${{ env.release_tag != '' }}
