@@ -31,8 +31,8 @@
     "@vitejs/plugin-react": "^6.1.0",
     "jsdom": "^30.0.1",
     "typescript": "^6.0.3",
-    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9",
-    "vite-plus": "0.2.9",
-    "vitest": "^4.1.10"
-  }
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "packageManager": "pnpm@11.26.0"
 }

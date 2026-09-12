@@ -20,6 +20,7 @@
 ### Task 1: Document the approved design
 
 **Files:**
+
 - Create: `docs/superpowers/specs/2026-08-22-tanstack-example-parity-design.md`
 - Create: `docs/superpowers/plans/2026-08-22-tanstack-example-parity.md`
 
@@ -36,6 +37,7 @@
 **Repository:** `/Users/alexasomba/Documents/GitHub/alexasomba/better-auth-flutterwave`
 
 **Files:**
+
 - Modify: `examples/tanstack/src/components/dashboard/PaymentManager.tsx`
 - Modify: `examples/tanstack/src/components/dashboard/TransactionsTable.tsx`
 - Modify: `examples/tanstack/src/components/dashboard/payment/TrustedServerOperations.tsx`
@@ -71,6 +73,7 @@
 **Repository:** `/Users/alexasomba/Documents/GitHub/alexasomba/better-auth-solana-payments`
 
 **Files:**
+
 - Modify: `examples/tanstack/package.json`
 - Modify: `examples/tanstack/src/lib/auth.ts`
 - Modify: `examples/tanstack/src/lib/auth-client.ts`

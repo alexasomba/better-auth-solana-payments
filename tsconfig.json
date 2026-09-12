@@ -11,9 +11,9 @@
     "skipLibCheck": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "types": ["node", "vitest/globals"],
+    "types": ["node", "vite-plus/test/globals"],
     "verbatimModuleSyntax": true
   },
-  "include": ["src", "test", "vite.config.ts", "vitest.config.ts"],
+  "include": ["src", "test", "vite.config.ts"],
   "exclude": ["dist", "node_modules"]
 }

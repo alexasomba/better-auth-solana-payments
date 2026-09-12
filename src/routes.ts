@@ -4,7 +4,7 @@ import {
   APIError,
   createAuthEndpoint,
   getSessionFromCtx,
-  originCheck,
+  originCheckMiddleware,
   sessionMiddleware,
 } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
@@ -107,7 +107,7 @@ export const createPayment = <P extends string = "/create-payment">(
 ) =>
   createAuthEndpoint(
     path,
-    { method: "POST", body: createPaymentBody, use: [sessionMiddleware, originCheck] },
+    { method: "POST", body: createPaymentBody, use: [sessionMiddleware, originCheckMiddleware] },
     async (ctx) => {
       const store = await paymentStore(ctx, ctx.body.organizationId);
       const reference = randomUUID();
@@ -140,7 +140,7 @@ export const verifyPayment = <P extends string = "/verify-payment">(
 ) =>
   createAuthEndpoint(
     path,
-    { method: "POST", body: verifyPaymentBody, use: [sessionMiddleware, originCheck] },
+    { method: "POST", body: verifyPaymentBody, use: [sessionMiddleware, originCheckMiddleware] },
     async (ctx) => {
       const { store, payment } = await loadPayment(
         ctx,

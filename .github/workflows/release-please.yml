@@ -48,53 +48,60 @@ jobs:
 
       - name: Checkout release tag
         if: ${{ env.release_tag != '' }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ env.release_tag }}
 
-      - name: Enable Corepack
+      - name: Setup Vite+
         if: ${{ env.release_tag != '' }}
-        run: corepack enable
-
-      - name: Setup Node
-        if: ${{ env.release_tag != '' }}
-        uses: actions/setup-node@v6
+        uses: voidzero-dev/setup-vp@v1.20.0
         with:
-          node-version: "22.x"
+          node-version: "24"
+          cache: true
+          run-install: |
+            - args: ["--frozen-lockfile"]
           registry-url: "https://registry.npmjs.org"
 
       - name: Install npm with trusted publishing support
         if: ${{ env.release_tag != '' }}
         run: npm install --global npm@11.18.0
 
-      - name: Install dependencies
-        if: ${{ env.release_tag != '' }}
-        run: pnpm install --frozen-lockfile
-
       - name: Install TanStack example dependencies
         if: ${{ env.release_tag != '' }}
-        run: pnpm --dir examples/tanstack install --frozen-lockfile --config.minimumReleaseAge=0
+        run: pnpm --dir examples/tanstack exec vp install --frozen-lockfile -- --config.minimumReleaseAge=0
+
+      - name: Check TanStack example
+        if: ${{ env.release_tag != '' }}
+        run: pnpm --dir examples/tanstack exec vp check
+
+      - name: Test TanStack example
+        if: ${{ env.release_tag != '' }}
+        run: pnpm --dir examples/tanstack exec vp test
+
+      - name: Build TanStack example
+        if: ${{ env.release_tag != '' }}
+        run: pnpm --dir examples/tanstack exec vp build
 
       - name: Check
         if: ${{ env.release_tag != '' }}
-        run: pnpm exec vp check
+        run: vp check
 
       - name: Test
         if: ${{ env.release_tag != '' }}
-        run: pnpm exec vp test
+        run: vp test
 
       - name: Build package
         if: ${{ env.release_tag != '' }}
-        run: pnpm exec vp pack
+        run: vp pack
 
       - name: Lint package metadata
         if: ${{ env.release_tag != '' }}
-        run: pnpm run lint:package
+        run: vp run lint:package
 
       - name: Lint package types
         if: ${{ env.release_tag != '' }}
-        run: pnpm run lint:types
+        run: vp run lint:types
 
       - name: Pack and inspect release tarball
         if: ${{ env.release_tag != '' }}

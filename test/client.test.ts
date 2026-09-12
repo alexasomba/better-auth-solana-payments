@@ -1,5 +1,5 @@
 import type { BetterFetch } from "@better-fetch/fetch";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import { solanaPaymentsClient } from "../src/client.ts";
 
