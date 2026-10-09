@@ -16,6 +16,9 @@ export interface SolanaPayment {
   decimals: number;
   recipient: string;
   status: SolanaPaymentStatus;
+  fulfillmentStatus?: "pending" | "processing" | "completed";
+  fulfillmentToken?: string | null;
+  fulfillmentClaimedAt?: Date | null;
   expiresAt: Date;
   signature?: string | null;
   /** Ledger slot, retained as a string to avoid JavaScript number rounding. */

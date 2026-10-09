@@ -67,6 +67,11 @@ jobs:
         if: ${{ env.release_tag != '' }}
         run: npm install --global npm@11.18.0
 
+      # Examples resolve the workspace package through dist exports.
+      - name: Build package
+        if: ${{ env.release_tag != '' }}
+        run: vp pack
+
       - name: Check TanStack example
         if: ${{ env.release_tag != '' }}
         run: vp -C examples/tanstack check
@@ -86,10 +91,6 @@ jobs:
       - name: Test
         if: ${{ env.release_tag != '' }}
         run: vp test
-
-      - name: Build package
-        if: ${{ env.release_tag != '' }}
-        run: vp pack
 
       - name: Lint package metadata
         if: ${{ env.release_tag != '' }}

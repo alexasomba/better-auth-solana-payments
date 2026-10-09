@@ -8,7 +8,9 @@ One-time Solana payment integration for [Better Auth](https://www.better-auth.co
 pnpm add better-auth better-auth-solana-payments solana-payments
 ```
 
-Requires Node.js 22 or later.
+Requires Node.js 22 or later and solana-payments 1.x.
+
+Existing installations must add the fulfillment fields before upgrading. For the default SQLite table and column names, see `migrations/0.2.0-sqlite.sql`; custom schemas must generate the equivalent Better Auth migration. Back up the database, verify paid-row fulfillment state, then deploy.
 
 ## Server setup
 
@@ -111,3 +113,9 @@ smoke test (`pnpm test:devnet`) and the full wallet verification flow.
 For devnet, configure a devnet SPL-token mint; the built-in `SOLANA_USDT` preset is the mainnet
 USDT mint and must not be used for devnet testing. In production, use a persistent Better Auth
 adapter, a generated `BETTER_AUTH_SECRET`, and a dedicated RPC provider.
+
+### Fulfillment migration and retries
+
+Generate/apply your Better Auth schema migration before upgrading. Add `fulfillmentStatus` (default `pending`), nullable `fulfillmentToken`, and nullable `fulfillmentClaimedAt` to `solanaPayment`. Backfill previously paid rows to `completed` before accepting requests, so historical payments are not fulfilled again.
+
+Payment settlement and fulfillment are separate: verification persists `paid`, then claims a database lease before invoking `onPaymentComplete`. Failed callbacks return an error and leave fulfillment pending; retry verification to recover, including after a restart. A crashed worker's claim becomes recoverable after five minutes. Callbacks must be idempotent by payment reference, since a crash after an external side effect can cause a retry. Responses expose `fulfillmentStatus`; grant access only when it is `completed`.

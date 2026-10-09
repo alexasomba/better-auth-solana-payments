@@ -36,12 +36,11 @@ export function solanaPayments(input: SolanaPaymentsOptions) {
     recipient: normalized,
     paymentExpirationMs: input.paymentExpirationMs ?? 30 * 60 * 1000,
   } satisfies SolanaPaymentsOptions;
-  const callbacksInFlight = new Set<string>();
   return {
     id: "solanaPayments",
     endpoints: {
       createPayment: createPayment(options, "/solana-payments/create-payment"),
-      verifyPayment: verifyPayment(options, "/solana-payments/verify-payment", callbacksInFlight),
+      verifyPayment: verifyPayment(options, "/solana-payments/verify-payment"),
       getPayment: getPayment(options, "/solana-payments/payment"),
     },
     schema: getSchema(options),

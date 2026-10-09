@@ -341,4 +341,55 @@ describe("Solana payment routes", () => {
 
     expect(callback).toHaveBeenCalledTimes(1);
   });
+  it("retries failed fulfillment after restart without verifying or charging again", async () => {
+    const adapter = createAdapter();
+    const client = createClient();
+    const callback = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("fulfillment unavailable"))
+      .mockResolvedValue(undefined);
+    const plugin = solanaPayments({
+      client: client as never,
+      recipient: RECIPIENT,
+      onPaymentComplete: callback,
+    });
+    const created = await plugin.endpoints.createPayment({
+      ...context(adapter),
+      body: { amount: "12.34" },
+    });
+    await expect(
+      plugin.endpoints.verifyPayment({
+        ...context(adapter),
+        body: { reference: created.reference },
+      }),
+    ).rejects.toThrow("fulfillment unavailable");
+    const restarted = solanaPayments({
+      client: client as never,
+      recipient: RECIPIENT,
+      onPaymentComplete: callback,
+    });
+    const paid = await restarted.endpoints.verifyPayment({
+      ...context(adapter),
+      body: { reference: created.reference },
+    });
+    expect(paid).toMatchObject({ status: "paid", fulfillmentStatus: "completed" });
+    expect(callback).toHaveBeenCalledTimes(2);
+    expect(client.payments.verify).toHaveBeenCalledTimes(1);
+  });
+  it("creates a base58 reference that decodes to exactly 32 bytes", async () => {
+    const adapter = createAdapter();
+    const plugin = solanaPayments({ client: createClient() as never, recipient: RECIPIENT });
+    const created = await plugin.endpoints.createPayment({
+      ...context(adapter),
+      body: { amount: "1" },
+    });
+    const alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+    let value = 0n;
+    for (const c of created.reference) {
+      expect(alphabet.includes(c)).toBe(true);
+      value = value * 58n + BigInt(alphabet.indexOf(c));
+    }
+    const bytes = value === 0n ? 0 : Math.ceil(value.toString(16).length / 2);
+    expect(bytes + (created.reference.match(/^1*/)?.[0].length ?? 0)).toBe(32);
+  });
 });
