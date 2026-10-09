@@ -10,7 +10,7 @@
     "test": "vp test run",
     "test:unit": "vp test run",
     "test:watch": "vp test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc6 --noEmit",
     "test:devnet": "node scripts/devnet-smoke.mjs"
   },
   "dependencies": {
@@ -33,5 +33,9 @@
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"
-  }
+  },
+  "engines": {
+    "node": ">=22.22.2"
+  },
+  "packageManager": "pnpm@12.10.1"
 }

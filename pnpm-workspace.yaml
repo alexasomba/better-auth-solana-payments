@@ -4,29 +4,29 @@ packages:
 
 catalog:
   "@arethetypeswrong/cli": "^0.18.5"
-  "@better-fetch/fetch": "1.3.1"
-  "@testing-library/jest-dom": "^6.10.0"
+  "@better-fetch/fetch": "1.3.2"
+  "@testing-library/jest-dom": "^7.0.1"
   "@testing-library/react": "^16.3.3"
-  "@tanstack/react-router": "^1.170.35"
-  "@tanstack/react-start": "^1.168.52"
-  "@types/node": "^24.13.4"
+  "@tanstack/react-router": "^1.170.41"
+  "@tanstack/react-start": "^1.168.60"
+  "@types/node": "^22.20.5"
   "@types/react": "^19.3.0"
   "@types/react-dom": "^19.3.0"
-  "@vitejs/plugin-react": "^6.1.1"
-  "better-auth": "1.6.31"
+  "@vitejs/plugin-react": "^6.1.2"
+  "better-auth": "1.7.7"
   "better-auth-solana-payments": "workspace:*"
-  "better-call": "1.3.8"
+  "better-call": "1.4.2"
   "defu": "^6.1.7"
-  js-yaml: 4.3.2
-  jsdom: "^30.0.1"
-  publint: "^0.3.24"
+  js-yaml: 5.4.3
+  jsdom: "^30.1.2"
+  publint: "^0.3.25"
   react: "^19.3.0"
   react-dom: "^19.3.0"
   "solana-payments": "^1.0.0"
-  "typescript": "^6.0.3"
-  "vite-plus": 0.3.1
-  "zod": "^4.6.2"
-  vite: npm:@voidzero-dev/vite-plus-core@0.3.1
+  "typescript": "npm:@typescript/typescript6@6.0.2"
+  "vite-plus": 1.1.0
+  "zod": "^4.6.5"
+  vite: npm:@voidzero-dev/vite-plus-core@1.1.0
 
 allowBuilds:
   esbuild: true
@@ -82,11 +82,20 @@ minimumReleaseAgeExclude:
   - "@solana/transaction-messages@8.0.0"
   - "@solana/transactions@8.0.0"
   - solana-payments@1.0.0
+  - vite-plus
+  - "@voidzero-dev/*"
+  - oxlint
+  - "@oxlint/*"
+  - oxlint-tsgolint
+  - "@oxlint-tsgolint/*"
+  - oxfmt
+  - "@oxfmt/*"
+  - vitest
+  - "@vitest/*"
 overrides:
   "source-map-js": "1.2.2"
   "js-yaml@": "catalog:"
   "vite@*": "catalog:"
-  "vitest@*": "4.1.11"
   "tinypool@2": "2.1.2"
 peerDependencyRules:
   allowAny:
