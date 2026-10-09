@@ -85,8 +85,9 @@ minimumReleaseAgeExclude:
 overrides:
   "source-map-js": "1.2.2"
   "js-yaml@": "catalog:"
-  vite@*: "catalog:"
-  vitest@*: 4.1.11
+  "vite@*": "catalog:"
+  "vitest@*": "4.1.11"
+  "tinypool@2": "2.1.2"
 peerDependencyRules:
   allowAny:
     - vite
