@@ -8,7 +8,9 @@ One-time Solana payment integration for [Better Auth](https://www.better-auth.co
 pnpm add better-auth better-auth-solana-payments solana-payments
 ```
 
-Requires Node.js 22 or later.
+Requires Node.js 22 or later and solana-payments 1.x.
+
+Existing installations must add the fulfillment fields before upgrading. For the default SQLite table and column names, see `migrations/0.2.0-sqlite.sql`; custom schemas must generate the equivalent Better Auth migration. Back up the database, verify paid-row fulfillment state, then deploy.
 
 ## Server setup
 

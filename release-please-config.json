@@ -11,5 +11,6 @@
       "type": "generic",
       "path": "src/version.ts"
     }
-  ]
+  ],
+  "bump-minor-pre-major": true
 }
