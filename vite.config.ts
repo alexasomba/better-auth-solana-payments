@@ -1,6 +1,10 @@
 import { defineConfig, type UserConfig } from "vite-plus";
 
 const config: UserConfig = defineConfig({
+  fmt: {
+    // Release Please owns the changelog's generated Markdown.
+    ignorePatterns: ["CHANGELOG.md", "**/routeTree.gen.ts"],
+  },
   staged: {
     "*": "vp check --fix",
   },
