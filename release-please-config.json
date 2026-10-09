@@ -12,5 +12,11 @@
       "path": "src/version.ts"
     }
   ],
-  "bump-minor-pre-major": true
+  "bump-minor-pre-major": true,
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "better-auth-solana-payments"
+    }
+  }
 }
