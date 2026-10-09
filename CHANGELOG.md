@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/alexasomba/better-auth-solana-payments/compare/v0.2.0...v0.2.1) (2026-10-09)
+
+
+### Miscellaneous Chores
+
+* document payment edge cases, update Node 22 tooling, and use solana-payments 1.0.1 ([72ec83b](https://github.com/alexasomba/better-auth-solana-payments/commit/72ec83b8e8fe22f6dc2e35465744aa2dee81eb7d))
+
 ## [0.2.0](https://github.com/alexasomba/better-auth-solana-payments/compare/v0.1.2...v0.2.0) (2026-10-09)
 
 
