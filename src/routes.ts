@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes } from "node:crypto";
 
 import {
   APIError,
@@ -91,6 +91,8 @@ function asResponse(payment: SolanaPayment, paymentUrl?: string) {
     decimals: payment.decimals,
     recipient: payment.recipient,
     status: payment.status,
+    fulfillmentStatus:
+      payment.fulfillmentStatus ?? (payment.status === "paid" ? "completed" : "pending"),
     expiresAt: payment.expiresAt,
     signature: payment.signature ?? undefined,
     slot: payment.slot ?? undefined,
@@ -99,6 +101,43 @@ function asResponse(payment: SolanaPayment, paymentUrl?: string) {
       : undefined,
     ...(paymentUrl ? { paymentUrl } : {}),
   };
+}
+
+// Solana Pay references are public keys (base58-encoded 32-byte values).
+function createReference() {
+  const bytes = randomBytes(32);
+  const alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  let number = BigInt(`0x${bytes.toString("hex")}`);
+  let encoded = "";
+  while (number > 0n) {
+    encoded = alphabet[Number(number % 58n)] + encoded;
+    number /= 58n;
+  }
+  for (const byte of bytes) {
+    if (byte !== 0) break;
+    encoded = "1" + encoded;
+  }
+  return encoded;
+}
+
+async function fulfillPayment(
+  ctx: GenericEndpointContext,
+  options: SolanaPaymentsOptions,
+  store: Awaited<ReturnType<typeof paymentStore>>,
+  payment: SolanaPayment,
+) {
+  const claimed = await store.claimFulfillment(payment.reference);
+  if (!claimed) return (await store.findByReference(payment.reference)) ?? payment;
+  const token = claimed.fulfillmentToken!;
+  try {
+    await options.onPaymentComplete?.(claimed, ctx);
+    const completed = await store.finishFulfillment(claimed.reference, token, true);
+    if (!completed) throw new Error("Fulfillment lease was lost; retry verification.");
+    return completed;
+  } catch (error) {
+    await store.finishFulfillment(claimed.reference, token, false);
+    throw error;
+  }
 }
 
 export const createPayment = <P extends string = "/create-payment">(
@@ -110,7 +149,7 @@ export const createPayment = <P extends string = "/create-payment">(
     { method: "POST", body: createPaymentBody, use: [sessionMiddleware, originCheckMiddleware] },
     async (ctx) => {
       const store = await paymentStore(ctx, ctx.body.organizationId);
-      const reference = randomUUID();
+      const reference = createReference();
       const request = options.client.payments.createRequest({
         amount: ctx.body.amount,
         recipient: options.recipient,
@@ -136,7 +175,6 @@ export const createPayment = <P extends string = "/create-payment">(
 export const verifyPayment = <P extends string = "/verify-payment">(
   options: SolanaPaymentsOptions,
   path: P = "/verify-payment" as P,
-  callbacksInFlight = new Set<string>(),
 ) =>
   createAuthEndpoint(
     path,
@@ -147,13 +185,13 @@ export const verifyPayment = <P extends string = "/verify-payment">(
         ctx.body.reference,
         ctx.body.organizationId,
       );
-      if (payment.status === "paid") return ctx.json(asResponse(payment));
+      if (payment.status === "paid")
+        return ctx.json(asResponse(await fulfillPayment(ctx, options, store, payment)));
       if (payment.status === "expired" || payment.expiresAt <= new Date()) {
         if (payment.status === "pending") await store.markExpired(payment.reference);
         routeError("PAYMENT_EXPIRED", "Payment intent has expired.");
       }
       if (payment.status !== "pending") routeError("INVALID_PAYMENT", "Payment is not pending.");
-      const wasPending = payment.status === "pending";
 
       let verified;
       try {
@@ -176,23 +214,12 @@ export const verifyPayment = <P extends string = "/verify-payment">(
       ) {
         routeError("PAYMENT_MISMATCH", "Payment did not exactly match the stored intent.");
       }
-      const { payment: paid, transitioned } = await store.markPaidWithTransition(
-        payment.reference,
-        {
-          signature: verified.signature,
-          slot: verified.slot?.toString(),
-        },
-      );
+      const { payment: paid } = await store.markPaidWithTransition(payment.reference, {
+        signature: verified.signature,
+        slot: verified.slot?.toString(),
+      });
       if (!paid) routeError("INVALID_PAYMENT", "Payment state could not be updated.");
-      if (wasPending && transitioned && !callbacksInFlight.has(paid.reference)) {
-        callbacksInFlight.add(paid.reference);
-        try {
-          await options.onPaymentComplete?.(paid, ctx);
-        } finally {
-          callbacksInFlight.delete(paid.reference);
-        }
-      }
-      return ctx.json(asResponse(paid));
+      return ctx.json(asResponse(await fulfillPayment(ctx, options, store, paid)));
     },
   );
 

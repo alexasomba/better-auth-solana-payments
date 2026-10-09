@@ -14,6 +14,9 @@ type SolanaPaymentSchema = Record<
       | "decimals"
       | "recipient"
       | "status"
+      | "fulfillmentStatus"
+      | "fulfillmentToken"
+      | "fulfillmentClaimedAt"
       | "expiresAt"
       | "signature"
       | "slot"
@@ -36,6 +39,9 @@ const solanaPaymentSchema: SolanaPaymentSchema = {
       decimals: { type: "number", required: true },
       recipient: { type: "string", required: true },
       status: { type: "string", required: true, defaultValue: "pending", index: true },
+      fulfillmentStatus: { type: "string", required: true, defaultValue: "pending" },
+      fulfillmentToken: { type: "string", required: false },
+      fulfillmentClaimedAt: { type: "date", required: false },
       expiresAt: { type: "date", required: true },
       signature: { type: "string", required: false, unique: true },
       slot: { type: "string", required: false },

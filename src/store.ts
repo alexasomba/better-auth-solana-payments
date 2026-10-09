@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import type { SolanaPayment } from "./types.ts";
 
 const SOLANA_PAYMENT_MODEL = "solanaPayment";
@@ -7,7 +9,7 @@ type Adapter = {
   findOne<T>(input: { model: string; where: WhereClause }): Promise<T | null>;
   update<T>(input: { model: string; update: Partial<T>; where: WhereClause }): Promise<T | null>;
 };
-type WhereClause = { field: string; value: string }[];
+type WhereClause = { field: string; value: string | null }[];
 
 export interface SolanaPaymentStoreContext {
   adapter: Adapter;
@@ -38,6 +40,12 @@ export interface SolanaPaymentStore {
   findByReference(reference: string): Promise<SolanaPayment | null>;
   markPaid(reference: string, input?: MarkPaidInput): Promise<SolanaPayment | null>;
   markPaidWithTransition(reference: string, input?: MarkPaidInput): Promise<MarkPaidResult>;
+  claimFulfillment(reference: string): Promise<SolanaPayment | null>;
+  finishFulfillment(
+    reference: string,
+    token: string,
+    completed: boolean,
+  ): Promise<SolanaPayment | null>;
   markExpired(reference: string): Promise<SolanaPayment | null>;
 }
 
@@ -112,6 +120,9 @@ export function createSolanaPaymentStore(context: SolanaPaymentStoreContext): So
           referenceType: owner.type,
           referenceId: owner.id,
           status: "pending",
+          fulfillmentStatus: "pending",
+          fulfillmentToken: null,
+          fulfillmentClaimedAt: null,
           createdAt: now,
           updatedAt: now,
         },
@@ -127,6 +138,52 @@ export function createSolanaPaymentStore(context: SolanaPaymentStoreContext): So
       return (await markPaidWithTransition(reference, input)).payment;
     },
     markPaidWithTransition,
+    async claimFulfillment(reference) {
+      const payment = await findByReference(reference);
+      if (
+        !payment ||
+        payment.status !== "paid" ||
+        !payment.fulfillmentStatus ||
+        payment.fulfillmentStatus === "completed"
+      )
+        return null;
+      if (
+        payment.fulfillmentStatus === "processing" &&
+        payment.fulfillmentClaimedAt &&
+        new Date(payment.fulfillmentClaimedAt).getTime() > Date.now() - 5 * 60_000
+      )
+        return null;
+      return context.adapter.update<SolanaPayment>({
+        model: SOLANA_PAYMENT_MODEL,
+        where: await paymentWhere([
+          { field: "id", value: payment.id },
+          { field: "fulfillmentStatus", value: payment.fulfillmentStatus },
+          { field: "fulfillmentToken", value: payment.fulfillmentToken ?? null },
+        ]),
+        update: {
+          fulfillmentStatus: "processing",
+          fulfillmentToken: randomUUID(),
+          fulfillmentClaimedAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
+    },
+    async finishFulfillment(reference, token, completed) {
+      return context.adapter.update<SolanaPayment>({
+        model: SOLANA_PAYMENT_MODEL,
+        where: await paymentWhere([
+          { field: "reference", value: reference },
+          { field: "fulfillmentToken", value: token },
+          { field: "fulfillmentStatus", value: "processing" },
+        ]),
+        update: {
+          fulfillmentStatus: completed ? "completed" : "pending",
+          fulfillmentToken: null,
+          fulfillmentClaimedAt: null,
+          updatedAt: new Date(),
+        },
+      });
+    },
     async markExpired(reference) {
       const payment = await findByReference(reference);
       if (!payment || payment.status !== "pending")
