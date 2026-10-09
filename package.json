@@ -45,15 +45,13 @@
     "dev": "vp pack --watch",
     "test": "vp test run",
     "lint": "vp lint src test",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc6 -p tsconfig.json --noEmit",
     "check": "vp check",
     "lint:package": "publint run --strict",
     "lint:types": "attw --profile esm-only --pack .",
     "prepare": "vp config"
   },
   "dependencies": {
-    "better-call": "catalog:",
-    "defu": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -74,5 +72,5 @@
   "engines": {
     "node": ">=22.0.0"
   },
-  "packageManager": "pnpm@11.26.0"
+  "packageManager": "pnpm@12.10.1"
 }
