@@ -1,5 +1,5 @@
 import type { GenericEndpointContext, InferOptionSchema } from "better-auth";
-import type { AddressInput, SolanaUsdtReadOnlyClient } from "solana-payments";
+import type { AddressInput, SolanaPaymentsReadOnlyClient } from "solana-payments";
 
 import type { SolanaPaymentsPluginSchema } from "./schema.ts";
 
@@ -29,7 +29,7 @@ export interface SolanaPayment {
 }
 
 export interface SolanaPaymentsOptions {
-  client: SolanaUsdtReadOnlyClient;
+  client: SolanaPaymentsReadOnlyClient;
   recipient: AddressInput;
   paymentExpirationMs?: number;
   onPaymentComplete?: (

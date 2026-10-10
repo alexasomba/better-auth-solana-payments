@@ -29,7 +29,10 @@ describe("solanaPaymentsClient", () => {
     });
 
     await actions.payment.create({ amount: "1000000", metadata: { orderId: "order-1" } });
-    await actions.payment.verify({ reference: "payment-1" });
+    await actions.payment.verify({
+      reference: "payment-1",
+      signature: "5XQqoA2BK2CAxyoLhYBU7dd1usTW1wMW3QDKMSmUeEwJ",
+    });
     await actions.payment.get({ reference: "payment-1" });
 
     expect(calls).toEqual([
@@ -42,7 +45,13 @@ describe("solanaPaymentsClient", () => {
       },
       {
         path: "/solana-payments/verify-payment",
-        options: { method: "POST", body: { reference: "payment-1" } },
+        options: {
+          method: "POST",
+          body: {
+            reference: "payment-1",
+            signature: "5XQqoA2BK2CAxyoLhYBU7dd1usTW1wMW3QDKMSmUeEwJ",
+          },
+        },
       },
       {
         path: "/solana-payments/payment",

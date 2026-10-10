@@ -84,10 +84,18 @@ Amounts are decimal strings in the configured token's display units (for example
 2.5 USDT with the default six-decimal USDT token). Do not pass JavaScript numbers, which can lose
 precision for token amounts.
 
-The browser may supply only the amount, optional metadata, reference, and optional organization
-ID. The server controls the recipient and token configuration, so clients cannot redirect funds
-or choose another mint. The integration uses a read-only RPC client: it stores no private keys and
-never signs or sends a transaction on behalf of a customer.
+If the wallet already returned a transaction signature, send it as the optional `signature` field
+to `payment.verify`. The SDK checks that candidate before scanning recent transactions, while still
+verifying the configured mint, recipient, amount, cluster and confirmation commitment. The plugin
+inherits the token program configured on the server's SDK client. Basic Token-2022 transfers are
+supported; transfer-fee and transfer-hook mints need extension-aware verification and are not
+accepted as ordinary transfers. See Solana's [payment verification guidance](https://solana.com/docs/payments/accept-payments/verification-tools)
+and [Token Extensions documentation](https://solana.com/docs/tokens/extensions) when configuring a mint.
+
+The browser may supply the amount, optional metadata, reference, optional transaction signature,
+and optional organization ID. The server controls the recipient and token configuration, so clients
+cannot redirect funds or choose another mint. The integration uses a read-only RPC client: it stores
+no private keys and never signs or sends a transaction on behalf of a customer.
 
 This package supports one-time payments only. It does not create recurring subscriptions or
 perform recurring charges.

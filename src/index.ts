@@ -4,6 +4,8 @@ import { createPayment, getPayment, verifyPayment } from "./routes.ts";
 import { getSchema } from "./schema.ts";
 import type { SolanaPaymentsOptions } from "./types.ts";
 
+import { PACKAGE_VERSION } from "./version.ts";
+
 export { PACKAGE_VERSION } from "./version.ts";
 export { getSchema, solanaPaymentsPluginSchema } from "./schema.ts";
 export { createSolanaPaymentStore } from "./store.ts";
@@ -22,6 +24,7 @@ const ERROR_CODES = defineErrorCodes({
   PAYMENT_EXPIRED: "Payment intent has expired.",
   INVALID_PAYMENT: "Payment is invalid.",
   PAYMENT_MISMATCH: "Payment did not exactly match the stored intent.",
+  PAYMENT_PROVIDER_UNAVAILABLE: "Solana RPC could not confirm the payment; retry verification.",
 });
 
 export function solanaPayments(input: SolanaPaymentsOptions) {
@@ -38,6 +41,7 @@ export function solanaPayments(input: SolanaPaymentsOptions) {
   } satisfies SolanaPaymentsOptions;
   return {
     id: "solanaPayments",
+    version: PACKAGE_VERSION,
     endpoints: {
       createPayment: createPayment(options, "/solana-payments/create-payment"),
       verifyPayment: verifyPayment(options, "/solana-payments/verify-payment"),
