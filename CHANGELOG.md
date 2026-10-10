@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/alexasomba/better-auth-solana-payments/compare/v0.3.0...v0.3.1) (2026-10-10)
+
+
+### Bug Fixes
+
+* require solana-payments 1.0.2 ([#10](https://github.com/alexasomba/better-auth-solana-payments/issues/10)) ([ae73ef9](https://github.com/alexasomba/better-auth-solana-payments/commit/ae73ef9e3075bf483699edea2743994be33aa088))
+
 ## [0.3.0](https://github.com/alexasomba/better-auth-solana-payments/compare/v0.2.1...v0.3.0) (2026-10-09)
 
 
