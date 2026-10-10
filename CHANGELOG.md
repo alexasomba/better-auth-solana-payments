@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/alexasomba/better-auth-solana-payments/compare/v0.3.1...v0.4.0) (2026-10-10)
+
+
+### Features
+
+* improve Solana payment verification ([#13](https://github.com/alexasomba/better-auth-solana-payments/issues/13)) ([d787d6a](https://github.com/alexasomba/better-auth-solana-payments/commit/d787d6a2bd7f988156102d1a713c7a666def14fa)), closes [#12](https://github.com/alexasomba/better-auth-solana-payments/issues/12)
+
 ## [0.3.1](https://github.com/alexasomba/better-auth-solana-payments/compare/v0.3.0...v0.3.1) (2026-10-10)
 
 
