@@ -207,6 +207,31 @@ describe("Solana payment routes", () => {
     });
   });
 
+  it("passes an optional signature to the SDK verification fast path", async () => {
+    const adapter = createAdapter();
+    const client = createClient();
+    const plugin = solanaPayments({ client: client as never, recipient: RECIPIENT });
+    const created = await plugin.endpoints.createPayment({
+      ...context(adapter),
+      body: { amount: "12.34" },
+    });
+
+    await plugin.endpoints.verifyPayment({
+      ...context(adapter),
+      body: {
+        reference: created.reference,
+        signature: "5XQqoA2BK2CAxyoLhYBU7dd1usTW1wMW3QDKMSmUeEwJ",
+      },
+    });
+
+    expect(client.payments.verify).toHaveBeenCalledWith({
+      reference: created.reference,
+      signature: "5XQqoA2BK2CAxyoLhYBU7dd1usTW1wMW3QDKMSmUeEwJ",
+      recipient: RECIPIENT,
+      amount: "12.34",
+    });
+  });
+
   it("expires pending records, enforces ownership and invokes completion only for the first paid transition", async () => {
     const adapter = createAdapter();
     const callback = vi.fn();
@@ -246,6 +271,7 @@ describe("Solana payment routes", () => {
       client: client as never,
       recipient: RECIPIENT,
       onPaymentComplete: callback,
+      organization: { enabled: true },
     });
     const orgContext = {
       context: {
@@ -280,7 +306,11 @@ describe("Solana payment routes", () => {
 
   it("maps missing organization plugin and membership during payment creation to unauthorized payment", async () => {
     const adapter = createAdapter();
-    const plugin = solanaPayments({ client: createClient() as never, recipient: RECIPIENT });
+    const plugin = solanaPayments({
+      client: createClient() as never,
+      recipient: RECIPIENT,
+      organization: { enabled: true },
+    });
 
     await expect(
       plugin.endpoints.createPayment({
@@ -295,6 +325,28 @@ describe("Solana payment routes", () => {
           ...context(adapter).context,
           hasPlugin: (id: string) => id === "organization",
         },
+        body: { amount: "12.34", organizationId: "org-1" },
+      }),
+    ).rejects.toMatchObject({ body: { code: "UNAUTHORIZED_PAYMENT" } });
+  });
+
+  it("does not accept organization payments unless they are enabled in the plugin", async () => {
+    const adapter = createAdapter({
+      member: [{ id: "member-1", userId: "user-1", organizationId: "org-1" }],
+    });
+    const plugin = solanaPayments({ client: createClient() as never, recipient: RECIPIENT });
+    const orgContext = {
+      context: {
+        adapter,
+        session: { user: { id: "user-1" }, session: { id: "session-user-1" } },
+        hasPlugin: (id: string) => id === "organization",
+      },
+      headers: new Headers(),
+    };
+
+    await expect(
+      plugin.endpoints.createPayment({
+        ...orgContext,
         body: { amount: "12.34", organizationId: "org-1" },
       }),
     ).rejects.toMatchObject({ body: { code: "UNAUTHORIZED_PAYMENT" } });

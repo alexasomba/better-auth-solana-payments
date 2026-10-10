@@ -16,6 +16,7 @@ export interface SolanaPaymentResponse {
   decimals: number;
   recipient: string;
   status: "pending" | "paid" | "expired" | "failed";
+  fulfillmentStatus?: "pending" | "processing" | "completed";
   expiresAt: Date;
   signature?: string;
   slot?: string;
@@ -33,7 +34,7 @@ export interface SolanaPaymentActions {
     options?: O,
   ) => Promise<FetchResult<SolanaPaymentResponse, O>>;
   verify: <O extends BetterFetchOption | undefined = undefined>(
-    data: { reference: string; organizationId?: string },
+    data: { reference: string; signature?: string; organizationId?: string },
     options?: O,
   ) => Promise<FetchResult<SolanaPaymentResponse, O>>;
   get: <O extends BetterFetchOption | undefined = undefined>(

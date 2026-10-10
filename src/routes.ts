@@ -8,7 +8,7 @@ import {
   sessionMiddleware,
 } from "better-auth/api";
 import type { GenericEndpointContext } from "better-auth";
-import { formatTokenAmount } from "solana-payments";
+import { formatTokenAmount, isSolanaPaymentsError } from "solana-payments";
 import { z } from "zod";
 
 import { createSolanaPaymentStore } from "./store.ts";
@@ -21,6 +21,8 @@ const createPaymentBody = z.object({
 });
 const verifyPaymentBody = z.object({
   reference: z.string().min(1),
+  /** Transaction signature lets the SDK verify a candidate before scanning recent history. */
+  signature: z.string().min(1).optional(),
   organizationId: z.string().min(1).optional(),
 });
 const getPaymentQuery = z.object({
@@ -34,13 +36,26 @@ function routeError(
     | "UNAUTHORIZED_PAYMENT"
     | "PAYMENT_EXPIRED"
     | "INVALID_PAYMENT"
-    | "PAYMENT_MISMATCH",
+    | "PAYMENT_MISMATCH"
+    | "PAYMENT_PROVIDER_UNAVAILABLE",
   message: string,
 ): never {
-  throw new APIError(code === "MISSING_SESSION" ? "UNAUTHORIZED" : "BAD_REQUEST", {
+  const status =
+    code === "MISSING_SESSION"
+      ? "UNAUTHORIZED"
+      : code === "PAYMENT_PROVIDER_UNAVAILABLE"
+        ? "INTERNAL_SERVER_ERROR"
+        : "BAD_REQUEST";
+  throw new APIError(status, {
     code,
     message,
   });
+}
+
+function assertOrganizationEnabled(options: SolanaPaymentsOptions, organizationId?: string) {
+  if (organizationId && options.organization?.enabled !== true) {
+    routeError("UNAUTHORIZED_PAYMENT", "Organization payments are not enabled.");
+  }
 }
 
 async function paymentStore(ctx: GenericEndpointContext, organizationId?: string) {
@@ -148,6 +163,7 @@ export const createPayment = <P extends string = "/create-payment">(
     path,
     { method: "POST", body: createPaymentBody, use: [sessionMiddleware, originCheckMiddleware] },
     async (ctx) => {
+      assertOrganizationEnabled(options, ctx.body.organizationId);
       const store = await paymentStore(ctx, ctx.body.organizationId);
       const reference = createReference();
       const request = options.client.payments.createRequest({
@@ -180,6 +196,7 @@ export const verifyPayment = <P extends string = "/verify-payment">(
     path,
     { method: "POST", body: verifyPaymentBody, use: [sessionMiddleware, originCheckMiddleware] },
     async (ctx) => {
+      assertOrganizationEnabled(options, ctx.body.organizationId);
       const { store, payment } = await loadPayment(
         ctx,
         ctx.body.reference,
@@ -197,10 +214,20 @@ export const verifyPayment = <P extends string = "/verify-payment">(
       try {
         verified = await options.client.payments.verify({
           reference: payment.reference,
+          ...(ctx.body.signature ? { signature: ctx.body.signature } : {}),
           recipient: payment.recipient,
           amount: formatTokenAmount(payment.amount, payment.decimals),
         });
       } catch (error) {
+        if (
+          isSolanaPaymentsError(error) &&
+          ["RPC_ERROR", "RPC_TIMEOUT", "TRANSACTION_TIMEOUT"].includes(error.code)
+        ) {
+          routeError(
+            "PAYMENT_PROVIDER_UNAVAILABLE",
+            "Solana RPC could not confirm the payment. Retry verification with the same reference.",
+          );
+        }
         routeError(
           "PAYMENT_MISMATCH",
           error instanceof Error ? error.message : "Payment did not match intent.",
@@ -231,6 +258,7 @@ export const getPayment = <P extends string = "/payment">(
     path,
     { method: "GET", query: getPaymentQuery, use: [sessionMiddleware] },
     async (ctx) => {
+      assertOrganizationEnabled(options, ctx.query.organizationId);
       const { store, payment } = await loadPayment(
         ctx,
         ctx.query.reference,
