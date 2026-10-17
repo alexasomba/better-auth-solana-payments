@@ -4,7 +4,6 @@
 
 Integración de pagos únicos con Solana para [Better Auth](https://www.better-auth.com).
 
-
 ## Instalación
 
 ```bash
@@ -13,8 +12,7 @@ pnpm add better-auth better-auth-solana-payments solana-payments
 
 Requiere Node.js 22.22.2 o superior y solana-payments 1.x.
 
-En instalaciones existentes, es necesario añadir los campos de cumplimiento (*fulfillment fields*) antes de realizar la actualización. Para conocer los nombres predeterminados de las tablas y columnas en SQLite, consulta `migrations/0.2.0-sqlite.sql`; si utilizas esquemas personalizados, deberás generar la migración equivalente para Better Auth. Realiza una copia de seguridad de la base de datos, verifica el estado de cumplimiento de los registros de pago y, a continuación, procede con el despliegue.
-
+En instalaciones existentes, es necesario añadir los campos de cumplimiento (_fulfillment fields_) antes de realizar la actualización. Para conocer los nombres predeterminados de las tablas y columnas en SQLite, consulta `migrations/0.2.0-sqlite.sql`; si utilizas esquemas personalizados, deberás generar la migración equivalente para Better Auth. Realiza una copia de seguridad de la base de datos, verifica el estado de cumplimiento de los registros de pago y, a continuación, procede con el despliegue.
 
 ## Configuración del servidor
 
@@ -41,7 +39,6 @@ export const auth = betterAuth({
 });
 ```
 
-
 ## Configuración del cliente
 
 ```ts
@@ -52,7 +49,6 @@ export const authClient = createAuthClient({
   plugins: [solanaPaymentsClient()],
 });
 ```
-
 
 ## Flujo de pago único
 
@@ -88,16 +84,15 @@ como completado. `payment.get` permite consultar el estado actual sin realizar n
 
 Los importes deben indicarse como cadenas de texto decimales, expresadas en las unidades de visualización del token configurado (por ejemplo, `"2.5"` equivale
 a 2.5 USDT, considerando un token USDT con seis decimales). No utilices números de JavaScript, ya que pueden perder
-precisión al representar cantidades de tokens. Si la billetera ya ha devuelto una firma de transacción, envíela a través del campo opcional `signature` hacia `payment.verify`. El SDK evalúa dicho valor antes de analizar las transacciones recientes, al tiempo que verifica el *mint* (activo), el destinatario, el monto, el clúster y el nivel de confirmación configurados. El *plugin* hereda la configuración del programa de tokens definida en el cliente del SDK del servidor. Se admiten transferencias básicas de Token-2022; sin embargo, los *mints* que utilizan extensiones como *transfer-fee* (comisiones por transferencia) o *transfer-hook* (ganchos de transferencia) requieren una verificación específica para dichas extensiones y no se aceptan como transferencias ordinarias. Consulte la [guía de verificación de pagos](https://solana.com/docs/payments/accept-payments/verification-tools) y la [documentación sobre extensiones de tokens](https://solana.com/docs/tokens/extensions) de Solana al configurar un *mint*.
+precisión al representar cantidades de tokens. Si la billetera ya ha devuelto una firma de transacción, envíela a través del campo opcional `signature` hacia `payment.verify`. El SDK evalúa dicho valor antes de analizar las transacciones recientes, al tiempo que verifica el _mint_ (activo), el destinatario, el monto, el clúster y el nivel de confirmación configurados. El _plugin_ hereda la configuración del programa de tokens definida en el cliente del SDK del servidor. Se admiten transferencias básicas de Token-2022; sin embargo, los _mints_ que utilizan extensiones como _transfer-fee_ (comisiones por transferencia) o _transfer-hook_ (ganchos de transferencia) requieren una verificación específica para dichas extensiones y no se aceptan como transferencias ordinarias. Consulte la [guía de verificación de pagos](https://solana.com/docs/payments/accept-payments/verification-tools) y la [documentación sobre extensiones de tokens](https://solana.com/docs/tokens/extensions) de Solana al configurar un _mint_.
 
-El navegador puede proporcionar el monto, metadatos opcionales, una referencia, la firma de la transacción (opcional) y el ID de la organización (opcional). El servidor controla la configuración del destinatario y del token, lo que impide que los clientes redirijan los fondos o elijan un *mint* distinto. La integración emplea un cliente RPC de solo lectura: no almacena claves privadas ni firma o envía transacciones en nombre del usuario.
+El navegador puede proporcionar el monto, metadatos opcionales, una referencia, la firma de la transacción (opcional) y el ID de la organización (opcional). El servidor controla la configuración del destinatario y del token, lo que impide que los clientes redirijan los fondos o elijan un _mint_ distinto. La integración emplea un cliente RPC de solo lectura: no almacena claves privadas ni firma o envía transacciones en nombre del usuario.
 
 Este paquete solo admite pagos únicos. No permite crear suscripciones recurrentes ni realizar cargos periódicos.
 
-
 ## Ejemplo con TanStack Start
 
-El repositorio incluye un ejemplo funcional basado en TanStack Start, disponible en [`examples/tanstack`](./examples/tanstack). Este ejemplo demuestra la autenticación mediante correo electrónico y contraseña, la creación de solicitudes de Solana Pay desde el servidor, el proceso de pago a través de una billetera y la verificación en el servidor utilizando un RPC de *devnet*.
+El repositorio incluye un ejemplo funcional basado en TanStack Start, disponible en [`examples/tanstack`](./examples/tanstack). Este ejemplo demuestra la autenticación mediante correo electrónico y contraseña, la creación de solicitudes de Solana Pay desde el servidor, el proceso de pago a través de una billetera y la verificación en el servidor utilizando un RPC de _devnet_.
 
 ```bash
 cd examples/tanstack
@@ -107,8 +102,7 @@ pnpm install
 pnpm dev
 ```
 
-El ejemplo utiliza un adaptador en memoria y está destinado exclusivamente al desarrollo local. No almacena claves privadas ni envía transacciones a la red. Consulte el archivo README correspondiente para obtener información sobre las pruebas RPC y las pruebas de funcionamiento (*smoke tests*) en la cadena (*on-chain*) (`pnpm test:devnet`), así como sobre el flujo completo de verificación de la billetera. Para la red de desarrollo (devnet), configura una emisión (mint) de tokens SPL específica para dicho entorno; el ajuste predefinido `SOLANA_USDT` corresponde a la emisión de USDT en la red principal (mainnet) y no debe utilizarse para pruebas en la red de desarrollo. En un entorno de producción, emplea un adaptador de Better Auth persistente, un identificador `BETTER_AUTH_SECRET` generado específicamente para este fin y un proveedor de RPC dedicado.
-
+El ejemplo utiliza un adaptador en memoria y está destinado exclusivamente al desarrollo local. No almacena claves privadas ni envía transacciones a la red. Consulte el archivo README correspondiente para obtener información sobre las pruebas RPC y las pruebas de funcionamiento (_smoke tests_) en la cadena (_on-chain_) (`pnpm test:devnet`), así como sobre el flujo completo de verificación de la billetera. Para la red de desarrollo (devnet), configura una emisión (mint) de tokens SPL específica para dicho entorno; el ajuste predefinido `SOLANA_USDT` corresponde a la emisión de USDT en la red principal (mainnet) y no debe utilizarse para pruebas en la red de desarrollo. En un entorno de producción, emplea un adaptador de Better Auth persistente, un identificador `BETTER_AUTH_SECRET` generado específicamente para este fin y un proveedor de RPC dedicado.
 
 ### Migración de cumplimiento (fulfillment) y reintentos
 
@@ -116,9 +110,7 @@ Genera y aplica la migración del esquema de Better Auth antes de realizar la ac
 
 La liquidación del pago y su ejecución (cumplimiento) son procesos independientes: la verificación persiste (`paid`), tras lo cual se solicita un bloqueo (lease) en la base de datos antes de invocar `onPaymentComplete`. Si las devoluciones de llamada (callbacks) fallan, se devuelve un error y la ejecución queda pendiente; para recuperarse, es necesario reintentar la verificación, incluso después de un reinicio. Si un proceso de trabajo (worker) falla, su bloqueo en la base de datos vuelve a estar disponible tras cinco minutos. Las devoluciones de llamada deben ser idempotentes respecto a la referencia del pago, ya que un fallo tras un efecto secundario externo puede provocar un reintento. Las respuestas exponen `fulfillmentStatus`; solo se debe conceder acceso cuando el estado sea `completed`.
 
-
 ## Liquidación y casos límite operativos
-
 
 ### Profundidad de confirmación
 
@@ -128,20 +120,17 @@ Se trata de una política de commitment, no de un número configurable de confir
 
 Muestre un estado de «espera de confirmación» y reintente la verificación en el servidor —aplicando un mecanismo de reintento con espera progresiva (backoff)— ante una transferencia no liquidada o un fallo en la llamada RPC (RPC failure). El valor `PAYMENT_MISMATCH`, por sí solo, no permite distinguir entre una transferencia no confirmada, una transferencia inexistente, un error en el token o la red, o un fallo del proveedor. Una notificación de éxito en una billetera (wallet) del navegador no constituye una prueba de liquidación. Conceda el acceso o beneficio únicamente cuando la respuesta incluya tanto `status === "paid"` como `fulfillmentStatus === "completed"`. Define el nivel de commitment antes de aceptar pagos y mantén la coherencia: una intención de pago ya liquidada reintenta la entrega del servicio sin volver a verificar la cadena; por lo tanto, cambiar el cliente a `finalized` no actualiza automáticamente los pagos confirmados previamente registrados.
 
-
 ### Verificación duplicada y devoluciones de llamada (callbacks)
 
 Las llamadas de verificación repetidas desde el navegador comparten el pago almacenado. Un mecanismo de bloqueo condicional en la base de datos permite una única devolución de llamada (callback) activa para la entrega del servicio; una vez completada la entrega, no se vuelve a ejecutar la llamada. Si la devolución de llamada falla, el bloqueo se libera para permitir un reintento; si un proceso queda bloqueado debido a un fallo inesperado, el bloqueo puede recuperarse tras cinco minutos. Esto no garantiza que los efectos externos ocurran exactamente una vez: un fallo tras enviar un correo electrónico, conceder acceso o actualizar otro servicio puede producirse antes de que la finalización quede registrada de forma persistente.
 
 Haz que `onPaymentComplete` sea idempotente utilizando la referencia de pago como una clave de negocio persistente. Emplea un registro único para la concesión/entrega del servicio y utiliza una transacción o un sistema de «bandeja de salida» (outbox) siempre que sea posible; emplea la misma referencia como clave de idempotencia para los servicios externos. Reintenta la verificación tras un fallo transitorio, incluso después de un reinicio del sistema. Es necesario implementar una migración para la entrega del servicio y un adaptador persistente; un adaptador que solo resida en memoria no puede coordinar procesos (workers) independientes.
 
-
 ### Reembolsos
 
 Este plugin, de solo lectura, no dispone de un endpoint para reembolsos ni gestiona estados de pago como `refunded`. Un reembolso es una transferencia independiente autorizada en la cadena (on-chain), no una reversión de la transacción ya liquidada. Conserva el registro original del pago como prueba de la liquidación. El registro de reembolsos de tu aplicación debe incluir la referencia del pago, el importe aprobado, el token emitido, el clúster, el destino, la firma del reembolso y su estado de confirmación; asimismo, debe gestionar los reintentos de forma idempotente antes de realizar cualquier nuevo envío.
 
 Verifica el destino del reembolso a través del flujo de revisión autenticado de tu aplicación; no confíes en una dirección proporcionada por el navegador ni infieras la identidad del pagador a partir de una cuenta de transacción arbitraria. Utiliza un servicio de firma independiente y controlado, o bien un proceso manual. Marca un reembolso como completado solo después de que se cumpla la política de confirmación establecida; a continuación, aplica la política de concesión de acceso de tu aplicación. El plugin no firma reembolsos ni revoca el acceso de forma automática.
-
 
 ### Token correcto, red incorrecta
 

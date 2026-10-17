@@ -15,7 +15,6 @@ comptes et intentions de paiement ; utilisez un véritable adaptateur avant le 
 références opaques qu'il a créées dans le navigateur et actualise chaque référence via le plugin
 point de terminaison `payment.get` limité au propriétaire.
 
-
 ## Flux démontré
 
 1. Créez un compte ou connectez-vous avec votre e-mail et votre mot de passe.
@@ -26,7 +25,6 @@ point de terminaison `payment.get` limité au propriétaire.
 
 L’interface utilisateur montre également les états d’intention de chargement, d’erreur, en attente, payé et expiré. Un portefeuille
 la redirection n’est jamais considérée comme une preuve de paiement.
-
 
 ## Exécutez-le
 
@@ -43,14 +41,12 @@ L'exemple ne stocke jamais les clés privées et ne signe ni ne soumet jamais de
 ça. Vous avez besoin d'un portefeuille Devnet financé avec le jeton SPL configuré. Le `SOLANA_USDT` par défaut
 preset est un jeton du réseau principal, ne l'utilisez donc pas pour cet exemple devnet.
 
-
 ## Portée
 
 `better-auth-solana-payments` prend en charge uniquement les paiements uniques. Cet exemple fait intentionnellement
 ne pas ajouter d'abonnements, de catalogues de produits, de portails de facturation, de paiement par carte ou de portefeuille côté client
 signature. Le destinataire configuré, le mint, les décimales du jeton, l'expiration et la vérification RPC restent
 appartenant au serveur.
-
 
 ## Valider la configuration du devnet
 

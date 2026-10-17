@@ -14,7 +14,6 @@ Nécessite Node.js 22.22.2 ou version ultérieure et solana-payments 1.x.
 
 Les installations existantes doivent ajouter les champs de traitement avant la mise à niveau. Pour les noms de table et de colonne SQLite par défaut, voir `migrations/0.2.0-sqlite.sql` ; les schémas personnalisés doivent générer la migration Better Auth équivalente. Sauvegardez la base de données, vérifiez l’état d’exécution des lignes payantes, puis déployez.
 
-
 ## Configuration du serveur
 
 Créez un client SDK Solana Payments en lecture seule et enregistrez le plugin Better Auth.
@@ -40,7 +39,6 @@ export const auth = betterAuth({
 });
 ```
 
-
 ## Configuration du client
 
 ```ts
@@ -51,7 +49,6 @@ export const authClient = createAuthClient({
   plugins: [solanaPaymentsClient()],
 });
 ```
-
 
 ## Flux de paiement unique
 
@@ -93,7 +90,6 @@ Le navigateur peut fournir le montant, des métadonnées facultatives, la réfé
 
 Ce package prend uniquement en charge les paiements ponctuels. Il ne crée pas d’abonnements et n’effectue pas de prélèvements récurrents.
 
-
 ## Exemple de démarrage de TanStack
 
 Le dépôt contient un exemple TanStack Start exécutable dans [`examples/tanstack`](./examples/tanstack). Il présente l’authentification par e-mail et mot de passe, la création de demandes Solana Pay côté serveur, le paiement par portefeuille et la vérification côté serveur via le RPC de devnet.
@@ -110,7 +106,6 @@ L’exemple utilise un adaptateur en mémoire et sert uniquement au développeme
 
 Pour devnet, configurez le mint d’un jeton SPL de devnet. Le preset `SOLANA_USDT` intégré correspond au mint USDT de mainnet et ne doit pas être utilisé pour les tests sur devnet. En production, utilisez un adaptateur Better Auth persistant, un `BETTER_AUTH_SECRET` généré et un fournisseur RPC dédié.
 
-
 ### Migration et tentatives d'exécution
 
 Générez et appliquez la migration du schéma Better Auth avant la mise à niveau. Ajoutez à `solanaPayment` les champs `fulfillmentStatus` (avec `pending` comme valeur par défaut), `fulfillmentToken` (nullable) et `fulfillmentClaimedAt` (nullable). Avant d’accepter de nouvelles demandes, renseignez `completed` pour les lignes déjà payées afin de ne pas exécuter une seconde fois les paiements historiques.
@@ -118,7 +113,6 @@ Générez et appliquez la migration du schéma Better Auth avant la mise à nive
 Le règlement du paiement et son exécution (fulfillment) sont deux étapes distinctes. La vérification enregistre le statut `paid`, puis réclame un bail en base de données avant d’appeler `onPaymentComplete`. Si le callback échoue, la requête renvoie une erreur et l’exécution reste en attente ; relancez la vérification pour réessayer, y compris après un redémarrage. Une réservation laissée par un processus interrompu peut être récupérée après cinq minutes. Rendez les callbacks idempotents à l’aide de la référence de paiement : un processus peut s’interrompre après un effet externe, avant que son achèvement soit enregistré. Les réponses exposent `fulfillmentStatus` ; n’accordez l’accès que lorsqu’il vaut `completed`.
 
 ## Cas limites de règlement et opérationnels
-
 
 ### Profondeur de confirmation
 
