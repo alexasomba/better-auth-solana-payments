@@ -1,3 +1,5 @@
+[English](README.md) · [Español](README.es-ES.md) · [Français](README.fr-FR.md)
+
 # Better Auth Solana Payments – TanStack Start example
 
 This example follows the same TanStack Start structure as the Paystack integration example and

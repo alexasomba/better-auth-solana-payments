@@ -1,3 +1,5 @@
+[English](README.md) · [Español](README.es-ES.md) · [Français](README.fr-FR.md)
+
 # Better Auth Solana Payments
 
 One-time Solana payment integration for [Better Auth](https://www.better-auth.com).
